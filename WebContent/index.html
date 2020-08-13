@@ -1,0 +1,271 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <style>
+  	form {
+	    width: 60%;
+	    border-radius: 5px;
+	    margin-left: auto;
+	    margin-right: auto;
+	    padding: 20px 55px 50px 55px;
+	    box-shadow: 0 3px 1px -2px rgba(0,0,0,.2), 0 2px 2px 0 rgba(0,0,0,.14), 0 1px 5px 0 rgba(0,0,0,.12);
+	    text-align: left;
+	    background-color: white;
+	}
+	
+	input, input[placeholder], .paymentFields {
+	    text-align: left;
+	    padding: 10px;
+	    font-size: 14px;
+	    width: 100%;
+	    border: none;
+	    border-bottom: 0.5px solid gray;
+	}
+
+  	.submit{
+	    width: 100%;
+	    color: white;
+	    font-size: medium;
+	    font-weight: 700;
+	    padding: 10px;
+	    border: none;
+	    background-color: #673BB7;
+	}
+	
+	.submit:hover {
+	   background-color: darkorange;
+	 }
+	 
+	.form-title{
+	    color: purple;
+	}
+	
+	.item-title{
+	    font-size: small;
+	    font-weight: 645;
+	    color: gray;
+	}
+	
+	.errorSpan{
+		color: red;
+	}
+	
+  </style>
+</head>
+
+<body>
+  <form name="signUp">
+  	<h2 class="form-title">Instant Pay Form</h2>
+  	<br />
+  	
+  	<div id="amountDiv">
+		<label for="amount" class="item-title">Amount<span class="required"> *</span></label>
+		 <br />
+		 <input type="number" id="amount" name="amount" step="any" value="" readonly />	
+		<br />
+		<br />
+	</div>
+	
+	<div id="bankIdDiv">
+		<label for="bank" class="item-title">Bank<span class="required"> *</span></label>
+		<select id="bankId" name="bankId" class="paymentFields" required>
+			<option value="">--Please Select Bank--</option>
+		</select>		
+		<br />
+		<span id="alertBank" class="errorSpan"></span>
+		<br />
+	</div>
+	
+	<div id="firstNameDiv">
+		<label for="firstName" class="item-title">First Name<span class="required"> *</span></label>
+		 <br />
+		 <input type="text" id="firstName" name="firstName" value="" readonly />	
+		<br />
+		<br />
+	</div>
+	
+	<div id="lastNameDiv">
+		<label for="lastName" class="item-title">Last Name<span class="required"> *</span></label>
+		 <br />
+		 <input type="text" id="lastName" name="lastName" value="" readonly />	
+		<br />
+		<br />
+	</div>
+	
+	<div id="emailDiv">
+		<label for="email" class="item-title">Email<span class="required"> *</span></label>
+		 <br />
+		 <input type="text" id="email" name="email" value="" readonly />	
+		<br />
+		<br />
+	</div>
+	
+	<div id="phoneNumberDiv">
+		<label for="phoneNumber" class="item-title">Phone Number<span class="required"> *</span></label>
+		 <br />
+		 <input type="text" id="phoneNumber" name="phoneNumber" value="" readonly />	
+		<br />
+		<br />
+	</div>
+	
+	<div id="accountIdDiv">
+		<label for="accountId" class="item-title">Account Id<span class="required"> *</span></label>
+		 <br />
+		 <input type="text" id="accountId" name="accountId" value="" readonly />	
+		<br />
+		<br />
+	</div>
+	
+	<div id="bankIdDiv">
+		<label for="currency" class="item-title">Currency<span class="required"> *</span></label>
+		 <br />
+		 <input type="text" id="currency" name="currency" value="" readonly />	
+		<br />
+		<br />
+	</div>
+	
+	<div id="referenceDiv">
+		<label for="reference" class="item-title">Reference<span class="required"> *</span></label>
+		 <br />
+		 <input type="text" id="reference" name="reference" value="" readonly />	
+		<br />
+		<br />
+	</div>
+	
+	<div id="storeCountryDiv">
+		<label for="storeCountry" class="item-title">Store Country<span class="required"> *</span></label>
+		 <br />
+		 <input type="text" id="storeCountry" name="storeCountry" value="" readonly />	
+		<br />
+		<br />
+	</div>
+	
+	<div id="storeNameDiv">
+		<label for="storeName" class="item-title">Store Name<span class="required"> *</span></label>
+		 <br />
+		 <input type="text" id="storeName" name="storeName" value="" readonly />	
+		<br />
+		<br />
+	</div>
+	
+	<button type="button" class="submit" onclick="handleSubmit()">Submit</button>
+	<br/>
+	<br/>
+	<button type="button" class="submit" onclick="handleCancel()">Cancel</button>
+	
+	
+  </form>
+  
+
+  
+  <script type="text/javascript">
+  var nullFields = [];
+  var curlecOptionalFields = ["email", "phoneNumber"];
+  
+	  function handleSubmit(){
+		  // Check if bank is empty
+		  if(document.getElementById("bankId").value == ""){
+			  document.getElementById("alertBank").innerHTML = "Invalid bank."
+			  return;
+		  }
+		  // Redirect to x_url_complete
+		  var url = "https://demo.curlec.com/new-instant-pay?";
+		  var method = "03";
+		  var description = "Instant";
+		  var amount = document.getElementById("amount").value;
+		  var bankCode = document.getElementById("bankId").value;
+		  var merchantId = "1";
+		  var employeeId = "2";
+		  url += "description=" + description + "&method=" + method + "&amount=" + amount + "&bankCode=" 
+		  + bankCode + "&merchantId=" + merchantId + "&employeeId=" + employeeId;
+		  
+		  curlecOptionalFields.forEach(function(field){
+			  if(!nullFields.includes(field)){
+				  url += "&" + field + "=" + 
+				  document.getElementById(field).value; 
+			  }
+		  })
+		  
+		  window.location.href = url;
+	  } 
+	  function handleCancel(){
+		  // Redirect them to x_url_cancel
+		  window.location.href = "https://youtube.com";
+	  }
+	  
+	  function handleInitialize(){
+		  var url = "https://localhost/EasyStore/connector";
+		  
+		  var xmlHttp = new XMLHttpRequest();
+		  xmlHttp.onreadystatechange = function() { 
+		        if (xmlHttp.readyState == XMLHttpRequest.DONE){		        	
+		        	var datas = xmlHttp.responseText.replace('{','').replace('}','');	        	
+		        	var arr = datas.split(',');
+		        	var dict = {}
+		        	
+		        	arr.forEach(function(item){
+		        		var each = item.split('=');
+		        		dict[each[0].trim()] = each[1];
+		        		// Check if field is null then add to nullFields array
+		        		if(each[1] == "" || each[1] == null){
+		        			nullFields.push(each[0]);
+		        		}
+		        	})
+
+		        	// Set value of required fields
+		        	document.getElementById("amount").value = parseInt(dict["amount"]);
+		        	document.getElementById("firstName").value = dict["firstName"];
+		        	document.getElementById("lastName").value = dict["lastName"];
+		        	document.getElementById("phoneNumber").value = dict["phoneNumber"];
+		        	document.getElementById("email").value = dict["email"];
+		        	
+		        	// Hide non-mandatory fields if passed value is null
+		        	nullFields.forEach(function(field){
+		        		var fieldDiv = field + "Div";
+		        		document.getElementById(fieldDiv).style.display = "none";
+		        	});
+		        		       
+		        }
+		    }
+		  xmlHttp.open("GET", url, true);
+		  xmlHttp.send(null);		  
+	  }
+  
+	  function getBankList(){
+			
+			var method = "00";
+			var msgToken = "01";
+			var xmlhttp = new XMLHttpRequest();
+			var curlecURL = "https://demo.curlec.com";
+			var url = curlecURL + "/curlec-services/banks?method=" + method + "&msgToken=" + msgToken;
+			var bnkList = [];
+			var options = [];
+			var sltBox = document.getElementById("bankId");
+					
+			xmlhttp.onreadystatechange = function() {
+				if (this.readyState == 4 && this.status == 200) {
+					var myArr = JSON.parse(this.responseText);
+					if(myArr.Status == 201){ 
+						bnkList = myArr.Response[0];
+						options = bnkList;
+						for(var i = 0, l = options.length; i < l; i++){
+							var option = options[i];
+							var opt = document.createElement("option");
+							opt.innerHTML = option.display_name;
+							opt.value = option.code;
+							sltBox.add(opt);
+						}
+					}
+				}
+			};
+			xmlhttp.open("POST", url, true);
+			xmlhttp.send();
+		}
+	  
+	  handleInitialize();
+	  getBankList();
+  </script>
+</body>
+
+</html>
