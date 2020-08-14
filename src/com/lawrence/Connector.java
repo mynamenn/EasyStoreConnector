@@ -8,6 +8,7 @@ import java.security.NoSuchAlgorithmException;
 import java.security.SignatureException;
 import java.util.Formatter;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
 
@@ -19,14 +20,24 @@ import javax.servlet.http.HttpServlet;
 import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 
-import sun.net.www.http.HttpClient;
+import org.apache.commons.fileupload.FileItem;
+import org.apache.commons.fileupload.FileUploadException;
+import org.apache.commons.fileupload.disk.DiskFileItemFactory;
+import org.apache.commons.fileupload.servlet.ServletFileUpload;
+
 
 
 @WebServlet("/Connector")
 public class Connector extends HttpServlet {
+	/**
+	 * 
+	 */
+	private static final long serialVersionUID = 1L;
 	private final String secretKey = "TEST";
+	// fdc049f852580e9af81687bad31081a465faa0ddea88126b4ffa3cfec2bd3b08
+	private HashMap<String, String> data = new HashMap<>();
 	
-	private final HashMap<String, String> data = new HashMap<>();
+	private HashMap<String, String> fieldDatas = new HashMap<>();
 	
 	private String x_account_id;
 	
@@ -59,9 +70,8 @@ public class Connector extends HttpServlet {
 	private String x_customer_billing_phone;
 	
     public Connector() {
-        super();
+    	data.put("testing", "value");
     }
-    
     
     private boolean generateSignature( HashMap<String, String> data, String secretkey, String x_signature){
     	// Sort data in alphabetical order
@@ -84,7 +94,6 @@ public class Connector extends HttpServlet {
 		} catch (SignatureException e) {
 			e.printStackTrace();
 		}
-    	
     	if(signature.equals(x_signature)) {
     		return true;
     	}else {
@@ -129,11 +138,18 @@ public class Connector extends HttpServlet {
 	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		response.addHeader("Access-Control-Allow-Origin", "*");
 		HashMap<String, String> datas = new HashMap<>();
-		datas.put("amount", "44");
-		datas.put("firstName", "");
-		datas.put("lastName", "Ngu");
-		datas.put("phoneNumber", "0167888888");
-		datas.put("email", "lawrencengu@gmail.com");
+		datas.put("amount", fieldDatas.get("x_amount"));
+		datas.put("firstName", fieldDatas.get("x_customer_first_name"));
+		datas.put("lastName", fieldDatas.get("x_customer_last_name"));
+		datas.put("phoneNumber", fieldDatas.get("x_customer_billing_phone"));
+		datas.put("email", fieldDatas.get("x_customer_email"));
+		datas.put("accountId", fieldDatas.get("x_account_id"));
+		datas.put("currency", fieldDatas.get("x_currency"));
+		datas.put("reference", fieldDatas.get("x_reference"));
+		datas.put("storeCountry", fieldDatas.get("x_store_country"));
+		datas.put("storeName", fieldDatas.get("x_store_name"));
+		datas.put("cancelLink", fieldDatas.get("x_url_cancel"));
+		
 		PrintWriter out = response.getWriter();
 		out.print(datas);
 	}
@@ -142,31 +158,21 @@ public class Connector extends HttpServlet {
 	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
 		response.addHeader("Access-Control-Allow-Origin", "*");
 		
-		String queryString = request.getQueryString();
-		x_signature = request.getParameter("x_signature");
-		
-		// Verify x_signature. If verified, allocate the variables and post to curlec.
-		if(generateSignature(data, secretKey, x_signature)) {
-			// Required fields
-			x_account_id = request.getParameter("x_account_id");
-			x_amount = request.getParameter("x_amount");
-			x_currency = request.getParameter("x_currency");
-			x_reference = request.getParameter("x_reference");
-			x_store_country = request.getParameter("x_store_country");
-			x_store_name = request.getParameter("x_store_name");
-			x_test = request.getParameter("x_test");
-			x_url_callback = request.getParameter("x_url_callback");
-			x_url_cancel = request.getParameter("x_url_cancel");
-			x_url_complete = request.getParameter("x_url_complete");
-			
-			// Non-mandatory fields
-			x_customer_first_name = request.getParameter("x_customer_first_name");
-			x_customer_last_name = request.getParameter("x_customer_last_name");
-			x_customer_email = request.getParameter("x_customer_email");
-			x_customer_billing_phone = request.getParameter("x_customer_billing_phone");
-			
-			
-	}
+		try {
+	        List<FileItem> items = new ServletFileUpload(new DiskFileItemFactory()).parseRequest(request);
+	        for (FileItem item : items) {
+	        	
+	        	// For company name
+	            if (item.isFormField()) {
+	                // Process regular form field (input type="text|radio|checkbox|etc", select, etc).
+	                String fieldName = item.getFieldName();
+	                String fieldData = item.getString();	
+	                fieldDatas.put(fieldName, fieldData);
+	            } 
+	        }
+	    } catch (FileUploadException e) {
+	        throw new ServletException("Cannot parse multipart request.", e);
+	    }
 
 }
 	}

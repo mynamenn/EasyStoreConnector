@@ -160,8 +160,9 @@
 
   
   <script type="text/javascript">
-  var nullFields = [];
   var curlecOptionalFields = ["email", "phoneNumber"];
+  var allFields = ["amount", "email", "phoneNumber", "storeName", "storeCountry", "reference", "firstName", "lastName", "accountId"];
+  var cancelLink = "https://youtube.com";
   
 	  function handleSubmit(){
 		  // Check if bank is empty
@@ -191,7 +192,7 @@
 	  } 
 	  function handleCancel(){
 		  // Redirect them to x_url_cancel
-		  window.location.href = "https://youtube.com";
+		  window.location.href = cancelLink;
 	  }
 	  
 	  function handleInitialize(){
@@ -202,30 +203,33 @@
 		        if (xmlHttp.readyState == XMLHttpRequest.DONE){		        	
 		        	var datas = xmlHttp.responseText.replace('{','').replace('}','');	        	
 		        	var arr = datas.split(',');
-		        	var dict = {}
+		        	var dict = {}   // Map fieldName to data
 		        	
 		        	arr.forEach(function(item){
 		        		var each = item.split('=');
 		        		dict[each[0].trim()] = each[1];
-		        		// Check if field is null then add to nullFields array
-		        		if(each[1] == "" || each[1] == null){
-		        			nullFields.push(each[0]);
-		        		}
 		        	})
 
 		        	// Set value of required fields
-		        	document.getElementById("amount").value = parseInt(dict["amount"]);
+		        	document.getElementById("amount").value = parseFloat(dict["amount"]).toFixed(2);
 		        	document.getElementById("firstName").value = dict["firstName"];
 		        	document.getElementById("lastName").value = dict["lastName"];
 		        	document.getElementById("phoneNumber").value = dict["phoneNumber"];
 		        	document.getElementById("email").value = dict["email"];
-		        	
-		        	// Hide non-mandatory fields if passed value is null
-		        	nullFields.forEach(function(field){
-		        		var fieldDiv = field + "Div";
-		        		document.getElementById(fieldDiv).style.display = "none";
-		        	});
-		        		       
+		        	document.getElementById("accountId").value = dict["accountId"];
+		        	document.getElementById("currency").value = dict["currency"];
+		        	document.getElementById("reference").value = dict["reference"];
+		        	document.getElementById("storeCountry").value = dict["storeCountry"];
+		        	document.getElementById("storeName").value = dict["storeName"];
+		        	cancelLink = dict["cancelLink"];
+					
+					// Iterate all the fields and check if value is null or ""
+		        	allFields.forEach(function(field){
+		        		if(document.getElementById(field).value == "" || document.getElementById(field).value == "null"){
+		        			var fieldDiv = field + "Div";
+		        			document.getElementById(fieldDiv).style.display = "none";
+		        		}
+		        	})	       
 		        }
 		    }
 		  xmlHttp.open("GET", url, true);
