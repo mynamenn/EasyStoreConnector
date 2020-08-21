@@ -66,29 +66,28 @@
 		<br />
 		<br />
 	</div>
-	
+  	
+
+	<input type="radio" name="paymentMethod" value="1" id="payBank" checked onchange="handleRadio()">
 	<div id="bankIdDiv">
-		<label for="bank" class="item-title">Bank<span class="required"> *</span></label>
+		<label for="bankId" class="item-title">FPX<span class="required"> *</span></label>
 		<select id="bankId" name="bankId" class="paymentFields" required>
 			<option value="">--Please Select Bank--</option>
 		</select>		
 		<br />
 		<span id="alertBank" class="errorSpan"></span>
-		<br />
 	</div>
 	
-	<div id="firstNameDiv">
-		<label for="firstName" class="item-title">First Name<span class="required"> *</span></label>
-		 <br />
-		 <input type="text" id="firstName" name="firstName" value="" readonly />	
-		<br />
-		<br />
-	</div>
+	<input type="radio" name="paymentMethod" value="2" id="creditCard" onchange="handleRadio()">
+	<label for="creditCard" id="cc">Credit Card</label> 
+	<br />
+	<br />
+
 	
-	<div id="lastNameDiv">
-		<label for="lastName" class="item-title">Last Name<span class="required"> *</span></label>
+	<div id="nameDiv">
+		<label for="name" class="item-title">First Name<span class="required"> *</span></label>
 		 <br />
-		 <input type="text" id="lastName" name="lastName" value="" readonly />	
+		 <input type="text" id="name" name="name" value="" readonly />	
 		<br />
 		<br />
 	</div>
@@ -117,7 +116,7 @@
 		<br />
 	</div>
 	
-	<div id="bankIdDiv">
+	<div id="currencyDiv">
 		<label for="currency" class="item-title">Currency<span class="required"> *</span></label>
 		 <br />
 		 <input type="text" id="currency" name="currency" value="" readonly />	
@@ -149,100 +148,101 @@
 		<br />
 	</div>
 	
-	<button type="button" class="submit" onclick="handleSubmit()">Submit</button>
+	<button type="button" class="submit" onclick="handleSubmit()">Proceed To FPX</button>
 	<br/>
 	<br/>
-	<button type="button" class="submit" onclick="handleCancel()">Cancel</button>
-	
 	
   </form>
   
 
   
   <script type="text/javascript">
+  var dict = {}   // Map fieldName to data
+  var url = "https://localhost/EasyStore/EasyStore";
+  var curlecUrl = "https://demo.curlec.com/new-instant-pay?";
+  var bankUrl = "";
+  //nullFields is used to determine if curlec optional field needs to be added to url
+  var nullFields = []; 
+  // allFields is iterated to hide fields that are null
+  var allFields = ["amount", "email", "phoneNumber", "storeName", "storeCountry", "reference", "name", "accountId", "currency"];
   var curlecOptionalFields = ["email", "phoneNumber"];
-  var allFields = ["amount", "email", "phoneNumber", "storeName", "storeCountry", "reference", "firstName", "lastName", "accountId"];
-  var cancelLink = "https://youtube.com";
+  var cancelLink = "";
+  var completeLink = "";  // Encode link
+  var value; // CC or FPX
+  var callback;
+  var paymentMode;
+  var payMethod;
+  
+  	  function handleRadio(){
+  		var radios = document.getElementsByTagName('input');
+  		for (var i = 0; i < radios.length; i++) {
+  		    if (radios[i].type === 'radio' && radios[i].checked) {
+  		        // get value, set checked flag or do whatever you need to
+  		        value = radios[i].value;       
+  		    }
+  		}
+  		// If bank is selected
+  		if(value == "1"){
+  			document.getElementById("bankId").style.display = "block";
+  		}else if(value == "2"){
+  			document.getElementById("bankId").style.display = "none";
+  		}
+  	  }
   
 	  function handleSubmit(){
 		  // Check if bank is empty
-		  if(document.getElementById("bankId").value == ""){
+		  if(document.getElementById("bankId").value == "" && value == "1"){
 			  document.getElementById("alertBank").innerHTML = "Invalid bank."
 			  return;
+		  }else{
+			  document.getElementById("alertBank").innerHTML = ""
 		  }
-		  // Redirect to x_url_complete
-		  var url = "https://demo.curlec.com/new-instant-pay?";
+		  // Redirect to x_url_complete	  
 		  var method = "03";
 		  var description = "Instant";
 		  var amount = document.getElementById("amount").value;
 		  var bankCode = document.getElementById("bankId").value;
 		  var merchantId = "1";
 		  var employeeId = "2";
-		  url += "description=" + description + "&method=" + method + "&amount=" + amount + "&bankCode=" 
-		  + bankCode + "&merchantId=" + merchantId + "&employeeId=" + employeeId;
 		  
+		  // merchantUrl = callBackUrl, both are encoded
+		  // https://localhost/EasyStore/callback
+		  var merchantUrl = "https" + encodeURIComponent("://localhost/EasyStore/callback");
+		  var callBackUrl = merchantUrl;
+		  
+		  console.log(merchantUrl);
+		  window.alert(merchantUrl);
+		    
+		  // Build curlec services link
+		  curlecUrl += "orderNo=" + dict["reference"] + "&description=" + description + "&method=" + method + "&amount=" + amount 
+		  + "&merchantId=" + merchantId + "&employeeId=" + employeeId + "&merchantUrl=" + merchantUrl + "&callbackUrl=" + callBackUrl;
+		  
+		  // Add curlec optional field to link if not null
 		  curlecOptionalFields.forEach(function(field){
 			  if(!nullFields.includes(field)){
-				  url += "&" + field + "=" + 
+				  curlecUrl += "&" + field + "=" + 
 				  document.getElementById(field).value; 
 			  }
 		  })
-		  
-		  window.location.href = url;
-	  } 
-	  function handleCancel(){
-		  // Redirect them to x_url_cancel
-		  window.location.href = cancelLink;
-	  }
-	  
-	  function handleInitialize(){
-		  var url = "https://localhost/EasyStore/connector";
-		  
-		  var xmlHttp = new XMLHttpRequest();
-		  xmlHttp.onreadystatechange = function() { 
-		        if (xmlHttp.readyState == XMLHttpRequest.DONE){		        	
-		        	var datas = xmlHttp.responseText.replace('{','').replace('}','');	        	
-		        	var arr = datas.split(',');
-		        	var dict = {}   // Map fieldName to data
-		        	
-		        	arr.forEach(function(item){
-		        		var each = item.split('=');
-		        		dict[each[0].trim()] = each[1];
-		        	})
 
-		        	// Set value of required fields
-		        	document.getElementById("amount").value = parseFloat(dict["amount"]).toFixed(2);
-		        	document.getElementById("firstName").value = dict["firstName"];
-		        	document.getElementById("lastName").value = dict["lastName"];
-		        	document.getElementById("phoneNumber").value = dict["phoneNumber"];
-		        	document.getElementById("email").value = dict["email"];
-		        	document.getElementById("accountId").value = dict["accountId"];
-		        	document.getElementById("currency").value = dict["currency"];
-		        	document.getElementById("reference").value = dict["reference"];
-		        	document.getElementById("storeCountry").value = dict["storeCountry"];
-		        	document.getElementById("storeName").value = dict["storeName"];
-		        	cancelLink = dict["cancelLink"];
-					
-					// Iterate all the fields and check if value is null or ""
-		        	allFields.forEach(function(field){
-		        		if(document.getElementById(field).value == "" || document.getElementById(field).value == "null"){
-		        			var fieldDiv = field + "Div";
-		        			document.getElementById(fieldDiv).style.display = "none";
-		        		}
-		        	})	       
-		        }
-		    }
-		  xmlHttp.open("GET", url, true);
-		  xmlHttp.send(null);		  
-	  }
-  
+		  // Add bankCode to url if FPX is selected
+		  if(value == "1"){
+			  curlecUrl += "&bankCode=" + bankCode + "&paymentMethod=1";
+		  }else if(value == "2"){
+			  curlecUrl += "&paymentMethod=2";
+		  }
+
+		  window.location.href = curlecUrl;
+		  
+	  } 
+	  
 	  function getBankList(){
-			
 			var method = "00";
 			var msgToken = "01";
 			var xmlhttp = new XMLHttpRequest();
-			var curlecURL = "https://demo.curlec.com";
-			var url = curlecURL + "/curlec-services/banks?method=" + method + "&msgToken=" + msgToken;
+			// Change link depending on live or demo
+			bankUrl = bankUrl.concat("/curlec-services/banks?method=" + method + "&msgToken=" + msgToken);
+			console.log(bankUrl)
 			var bnkList = [];
 			var options = [];
 			var sltBox = document.getElementById("bankId");
@@ -263,12 +263,77 @@
 					}
 				}
 			};
-			xmlhttp.open("POST", url, true);
+			xmlhttp.open("POST", bankUrl, true);
 			xmlhttp.send();
 		}
 	  
-	  handleInitialize();
-	  getBankList();
+	  function handleInitialize(callback){
+		  var xmlHttp = new XMLHttpRequest();
+		  xmlHttp.onreadystatechange = function() { 
+		        if (xmlHttp.readyState == XMLHttpRequest.DONE){		   
+		        	
+		        	var datas = xmlHttp.responseText.replace('{','').replace('}','');	        	
+		        	var arr = datas.split(',');
+		        	arr.forEach(function(item){
+		        		var each = item.split('=');
+		        		dict[each[0].trim()] = each[1];
+		        	})
+		        	
+		        	var company = dict['company'];
+		        	if(company === "Ecwid"){
+		        		url = "https://localhost/EasyStore/Ecwid"; 
+		        		curlecUrl = (dict["paymentMode"]==="true") ? "https://demo.curlec.com/new-instant-pay?" : "https://go.curlec.com/new-instant-pay?"; 
+		        		bankUrl = (dict["paymentMode"]==="true") ? "https://demo.curlec.com" : "https://go.curlec.com"; 
+		        		
+		        		// Set value of required fields
+			        	document.getElementById("amount").value = parseFloat(dict["amount"]).toFixed(2);
+			        	document.getElementById("name").value = dict["name"];
+			        	document.getElementById("phoneNumber").value = dict["phoneNumber"];
+			        	document.getElementById("email").value = dict["email"];
+			        	document.getElementById("reference").value = dict["reference"];
+			        	callback = dict["callback"];
+			        	paymentMode = dict["paymentMode"];
+			        	payMethod = dict["payMethod"];
+
+		        	}else if(company === "EasyStore"){
+		        		url = "https://localhost/EasyStore/EasyStore"; 
+		        		curlecUrl = (dict["test"]==="true") ? "https://demo.curlec.com/new-instant-pay?" : "https://go.curlec.com/new-instant-pay?"; 
+		        		bankUrl = (dict["test"]==="true") ? "https://demo.curlec.com" : "https://go.curlec.com"; 
+						
+		        		// Set value of required fields
+			        	document.getElementById("amount").value = parseFloat(dict["amount"]).toFixed(2);
+			        	document.getElementById("name").value = dict["name"];
+			        	document.getElementById("phoneNumber").value = dict["phoneNumber"];
+			        	document.getElementById("email").value = dict["email"];
+			        	document.getElementById("accountId").value = dict["accountId"];
+			        	document.getElementById("currency").value = dict["currency"];
+			        	document.getElementById("reference").value = dict["reference"];
+			        	document.getElementById("storeCountry").value = dict["storeCountry"];
+			        	document.getElementById("storeName").value = dict["storeName"];
+			        	callback = dict["callback"];
+			        	cancelLink = dict["cancelLink"];
+			        	completeLink = dict["completeLink"];
+			        	
+		        	}   	
+					
+					// Iterate all the fields and check if value is null or ""
+		        	allFields.forEach(function(field){
+		        		if(document.getElementById(field).value == "" || document.getElementById(field).value == "null"){
+		        			var fieldDiv = field + "Div";
+		        			document.getElementById(fieldDiv).style.display = "none";
+		        			nullFields.push(field);		  
+		        		}
+		        	})
+		        	
+		        	callback();
+		        }
+		    }
+		  
+		  xmlHttp.open("GET", url, true);
+		  xmlHttp.send(null);	
+	  }
+	  
+	  handleInitialize(getBankList);
   </script>
 </body>
 

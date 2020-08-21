@@ -1,7 +1,10 @@
 package com.lawrence;
 
+import java.awt.Desktop;
 import java.io.IOException;
 import java.io.PrintWriter;
+import java.net.URI;
+import java.net.URISyntaxException;
 import java.security.InvalidKeyException;
 import java.security.Key;
 import java.security.NoSuchAlgorithmException;
@@ -14,6 +17,7 @@ import java.util.TreeMap;
 
 import javax.crypto.Mac;
 import javax.crypto.spec.SecretKeySpec;
+import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
@@ -27,7 +31,7 @@ import org.apache.commons.fileupload.servlet.ServletFileUpload;
 
 
 
-@WebServlet("/Connector")
+@WebServlet(urlPatterns = {"/EasyStore", "/Ecwid"})
 public class Connector extends HttpServlet {
 	/**
 	 * 
@@ -38,36 +42,6 @@ public class Connector extends HttpServlet {
 	private HashMap<String, String> data = new HashMap<>();
 	
 	private HashMap<String, String> fieldDatas = new HashMap<>();
-	
-	private String x_account_id;
-	
-	private String x_amount;
-	
-	private String x_currency;
-	
-	private String x_reference;
-	
-	private String x_store_country;
-	
-	private String x_store_name;
-	
-	private String x_test;
-	
-	private String x_url_callback;
-	
-	private String x_url_cancel;
-	
-	private String x_url_complete;
-    
-	private String x_signature;
-	
-	private String x_customer_first_name;
-	
-	private String x_customer_last_name;
-	
-	private String x_customer_email;
-	
-	private String x_customer_billing_phone;
 	
     public Connector() {
     	data.put("testing", "value");
@@ -133,34 +107,13 @@ public class Connector extends HttpServlet {
 			    "error building signature, invalid key " + HASH_ALGORITHM);
 			 }
 	}
-
-
-	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		response.addHeader("Access-Control-Allow-Origin", "*");
-		HashMap<String, String> datas = new HashMap<>();
-		datas.put("amount", fieldDatas.get("x_amount"));
-		datas.put("firstName", fieldDatas.get("x_customer_first_name"));
-		datas.put("lastName", fieldDatas.get("x_customer_last_name"));
-		datas.put("phoneNumber", fieldDatas.get("x_customer_billing_phone"));
-		datas.put("email", fieldDatas.get("x_customer_email"));
-		datas.put("accountId", fieldDatas.get("x_account_id"));
-		datas.put("currency", fieldDatas.get("x_currency"));
-		datas.put("reference", fieldDatas.get("x_reference"));
-		datas.put("storeCountry", fieldDatas.get("x_store_country"));
-		datas.put("storeName", fieldDatas.get("x_store_name"));
-		datas.put("cancelLink", fieldDatas.get("x_url_cancel"));
-		
-		PrintWriter out = response.getWriter();
-		out.print(datas);
-	}
-
-	
-	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		response.addHeader("Access-Control-Allow-Origin", "*");
-		
+    
+    // Parse request formData into fieldDatas
+    private void parseData(HttpServletRequest request, String company) {
+    	List<FileItem> items;
 		try {
-	        List<FileItem> items = new ServletFileUpload(new DiskFileItemFactory()).parseRequest(request);
-	        for (FileItem item : items) {
+			items = new ServletFileUpload(new DiskFileItemFactory()).parseRequest(request);
+			for (FileItem item : items) {
 	        	
 	        	// For company name
 	            if (item.isFormField()) {
@@ -170,9 +123,103 @@ public class Connector extends HttpServlet {
 	                fieldDatas.put(fieldName, fieldData);
 	            } 
 	        }
-	    } catch (FileUploadException e) {
-	        throw new ServletException("Cannot parse multipart request.", e);
-	    }
+			fieldDatas.put("company", company);
+		} catch (FileUploadException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
+        
+    }
 
-}
+
+	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		response.addHeader("Access-Control-Allow-Origin", "*");
+		
+		HashMap<String, String> datas = new HashMap<>();
+		String company = fieldDatas.get("company");
+		ServletContext context = request.getSession().getServletContext();
+		
+		if(company.equals("EasyStore")) {
+			datas.put("amount", fieldDatas.get("x_amount"));
+			datas.put("name", fieldDatas.get("x_customer_first_name")+ " "+ fieldDatas.get("x_customer_last_name"));
+			datas.put("phoneNumber", fieldDatas.get("x_customer_billing_phone"));
+			datas.put("email", fieldDatas.get("x_customer_email"));
+			datas.put("accountId", fieldDatas.get("x_account_id"));
+			datas.put("currency", fieldDatas.get("x_currency"));
+			datas.put("reference", fieldDatas.get("x_reference"));
+			datas.put("storeCountry", fieldDatas.get("x_store_country"));
+			datas.put("storeName", fieldDatas.get("x_store_name"));
+			datas.put("cancelLink", fieldDatas.get("x_url_cancel"));
+			datas.put("completeLink", fieldDatas.get("x_url_complete"));
+			datas.put("signature", fieldDatas.get("x_signature"));
+			datas.put("callback", fieldDatas.get("x_url_callback"));
+			datas.put("test", fieldDatas.get("x_test"));
+			datas.put("company", fieldDatas.get("company"));
+			context.setAttribute(fieldDatas.get("x_reference"), datas);
+			
+			Object attribute = context.getAttribute(fieldDatas.get("x_reference"));
+			System.out.println(attribute);
+			
+		}else if(company.equals("Ecwid")) {
+			datas.put("employeeId", fieldDatas.get("employeeId"));
+			datas.put("merchantId", fieldDatas.get("merchantId"));
+			datas.put("callback", fieldDatas.get("callback"));
+			datas.put("amount", fieldDatas.get("amount"));
+			datas.put("email", fieldDatas.get("email"));
+			datas.put("phoneNumber", fieldDatas.get("phoneNumber"));
+			datas.put("paymentMode", fieldDatas.get("paymentMode"));
+			datas.put("payMethod", fieldDatas.get("payMethod"));
+			datas.put("recurringMode", fieldDatas.get("recurringMode"));
+			datas.put("orderId", fieldDatas.get("orderId"));
+			datas.put("name", fieldDatas.get("name"));
+			datas.put("reference", fieldDatas.get("reference"));
+			datas.put("company", fieldDatas.get("company"));
+			
+			context.setAttribute(fieldDatas.get("reference"), datas);
+			
+			Object attribute = context.getAttribute(fieldDatas.get("reference"));
+			System.out.println(attribute);
+		}
+		
+		PrintWriter out = response.getWriter();
+		out.print(datas);
 	}
+
+	
+	protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+		
+		response.addHeader("Access-Control-Allow-Origin", "*");
+		String redirectUrl = "https://localhost/EasyStore/";
+		PrintWriter out = response.getWriter();
+		
+		// Check if it's Ecwid or EasyStore
+		// Returns /EasyStore/EasyStore or /EasyStore/Ecwid
+		String path = request.getRequestURI().split("/")[2];
+	
+		if(path.equals("EasyStore")) {
+			out.println("EasyStore datas received!");
+			// Put into fieldDatas hash map
+			parseData(request, "EasyStore");
+			
+			// Redirect to index.html if true
+			if(generateSignature( data, secretKey, fieldDatas.get("x_signature"))) {
+				try {
+					Desktop.getDesktop().browse(new URI(redirectUrl));
+				} catch (IOException | URISyntaxException e) {
+					e.printStackTrace();
+				}
+			}
+			
+		}else if(path.equals("Ecwid")) {
+			out.println("Ecwid datas received!");
+			parseData(request, "Ecwid");
+			try {
+				Desktop.getDesktop().browse(new URI(redirectUrl));
+			} catch (IOException | URISyntaxException e) {
+				e.printStackTrace();
+			}
+		}
+		
+	}
+}
+

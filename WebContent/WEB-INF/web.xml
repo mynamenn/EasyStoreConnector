@@ -10,14 +10,16 @@
     <welcome-file>default.jsp</welcome-file>
   </welcome-file-list>
   
-  <servlet>
-		<servlet-name>abc</servlet-name>
-		<servlet-class>com.lawrence.Connector</servlet-class>
+
+	<servlet>
+		<servlet-name>callback</servlet-name>
+		<servlet-class>com.lawrence.Callback</servlet-class>
 	</servlet>
 	
-	<servlet-mapping>
-		<servlet-name>abc</servlet-name>
-		<url-pattern>/connector</url-pattern>
-	</servlet-mapping>
+
 	
+	<servlet-mapping>
+		<servlet-name>callback</servlet-name>
+		<url-pattern>/callback</url-pattern>
+	</servlet-mapping>
 </web-app>
