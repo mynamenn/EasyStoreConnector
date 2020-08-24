@@ -118,42 +118,51 @@ public class Callback extends HttpServlet {
 		// Put session data in hashmap
 		HashMap<String, String> datas = getDatas(request, curlecResponseDict.get("fpx_sellerOrderNo"));
 		
-		// Parse result code to either pending, failed, completed.
-		String[] parsed = resultToUrl(curlecResponseDict.get("fpx_debitAuthCode"), 
-				datas.get("completeLink"), datas.get("cancelLink"));
-		String parsedResult = parsed[0];
-		String redirectUrl = parsed[1];
-		
-		// Build urlParameters
-		// Different companies have different callback urls
-		String urlParameters = "x_account_id=" + datas.get("accountId") + 
-				"&x_currency=" + curlecResponseDict.get("fpx_txnCurrency") + "&x_reference=" + datas.get("reference") + 
-				"&x_amount=" + curlecResponseDict.get("fpx_txnAmount") + "&x_gateway_reference=" + curlecResponseDict.get("fpx_fpxTxnId") + 
-				"&x_result=" + parsedResult + "&x_signature=" + datas.get("signature") + 
-				"&x_test=" + datas.get("test");
-		
-		
-		// HTTP POST x-www-form-urlencoded format
-		String x_callback_url = datas.get("callback");
-		byte[] postData = urlParameters.getBytes( StandardCharsets.UTF_8 );
-		int postDataLength = postData.length;
-		URL url = new URL( x_callback_url );
-		HttpURLConnection conn= (HttpURLConnection) url.openConnection();           
-		conn.setDoOutput(true);
-		conn.setInstanceFollowRedirects(false);
-		conn.setRequestMethod("POST");
-		conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded"); 
-		conn.setRequestProperty("charset", "utf-8");
-		conn.setRequestProperty("Content-Length", Integer.toString(postDataLength ));
-		conn.setUseCaches(false);
-		try(DataOutputStream wr = new DataOutputStream(conn.getOutputStream())) {
-		   wr.write( postData );
+		if(datas.get("company").equals("EasyStore")) {
+			// Parse result code to either pending, failed, completed.
+			String[] parsed = resultToUrl(curlecResponseDict.get("fpx_debitAuthCode"), 
+					datas.get("completeLink"), datas.get("cancelLink"));
+			String parsedResult = parsed[0];
+			String redirectUrl = parsed[1];
+			
+			// Build urlParameters
+			// Different companies have different callback urls
+			String urlParameters = "x_account_id=" + datas.get("accountId") + 
+					"&x_currency=" + curlecResponseDict.get("fpx_txnCurrency") + "&x_reference=" + datas.get("reference") + 
+					"&x_amount=" + curlecResponseDict.get("fpx_txnAmount") + "&x_gateway_reference=" + curlecResponseDict.get("fpx_fpxTxnId") + 
+					"&x_result=" + parsedResult + "&x_signature=" + datas.get("signature") + 
+					"&x_test=" + datas.get("test");
+			
+			
+			// Asynchronous post for EasyStore
+			// HTTP POST x-www-form-urlencoded format
+			String x_callback_url = datas.get("callback");
+			byte[] postData = urlParameters.getBytes( StandardCharsets.UTF_8 );
+			int postDataLength = postData.length;
+			URL url = new URL( x_callback_url );
+			HttpURLConnection conn= (HttpURLConnection) url.openConnection();           
+			conn.setDoOutput(true);
+			conn.setInstanceFollowRedirects(false);
+			conn.setRequestMethod("POST");
+			conn.setRequestProperty("Content-Type", "application/x-www-form-urlencoded"); 
+			conn.setRequestProperty("charset", "utf-8");
+			conn.setRequestProperty("Content-Length", Integer.toString(postDataLength ));
+			conn.setUseCaches(false);
+			try(DataOutputStream wr = new DataOutputStream(conn.getOutputStream())) {
+			   wr.write( postData );
+			}
+			
+			// Redirect depending on status
+			if(redirectUrl != "") {
+				response.sendRedirect(redirectUrl);
+			}
+		}else if(datas.get("company").equals("Ecwid")) {
+			// Parse result code and redirect to respective url
+			
 		}
 		
-		// Redirect depending on status
-		if(redirectUrl != "") {
-			response.sendRedirect(redirectUrl);
-		}
+		
+		
 		
 	}
 
